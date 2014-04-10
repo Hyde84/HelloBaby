@@ -4,7 +4,7 @@ class AudiosController < ApplicationController
   # GET /audios
   # GET /audios.json
   def index
-    @audios = Audio.all
+    @audios = current_user.audios if current_user
   end
 
   # GET /audios/1
@@ -25,15 +25,28 @@ class AudiosController < ApplicationController
   # POST /audios.json
   def create
     @audio = Audio.new(audio_params)
+    begin
+      uploaded_io = params[:audio][:file]
+      @audio.user =current_user
+      @audio.filename=uploaded_io.original_filename
+      directory = "public/audio/upload/"
+      path = File.join(directory, @audio.filename)
 
-    respond_to do |format|
-      if @audio.save
-        format.html { redirect_to @audio, notice: 'Audio was successfully created.' }
-        format.json { render action: 'show', status: :created, location: @audio }
-      else
-        format.html { render action: 'new' }
-        format.json { render json: @audio.errors, status: :unprocessable_entity }
+
+      File.open(path, "wb") do |file|
+        file.write(uploaded_io.read)
       end
+      respond_to do |format|
+        if @audio.save
+          format.html { redirect_to @audio, notice: 'Audio was successfully created.' }
+          format.json { render action: 'show', status: :created, location: @audio }
+        else
+          format.html { render action: 'new' }
+          format.json { render json: @audio.errors, status: :unprocessable_entity }
+        end
+      end
+    rescue
+      p params[:upload][:file]
     end
   end
 
@@ -69,6 +82,6 @@ class AudiosController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def audio_params
-      params.require(:audio).permit(:filename)
+      #params.require(:audio)
     end
 end
