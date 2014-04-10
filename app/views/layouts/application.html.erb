@@ -7,6 +7,13 @@
   <%= csrf_meta_tags %>
 </head>
 <body>
+<div>
+  <% if current_user %>
+      Здравствуйте, <%= current_user.name %>!
+  <% else %>
+      <%= link_to "Войдите через Фейсбук", "/auth/facebook" %>
+  <% end %>
+</div>
 
 <%= yield %>
 
