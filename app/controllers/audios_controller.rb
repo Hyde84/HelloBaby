@@ -1,3 +1,4 @@
+require 'fileutils'
 class AudiosController < ApplicationController
   before_action :set_audio, only: [:show, :edit, :update, :destroy]
 
@@ -30,12 +31,15 @@ class AudiosController < ApplicationController
       @audio.user =current_user
       @audio.filename=uploaded_io.original_filename
       directory = "public/audio/upload/"
+      if !File.directory?(directory)
+        FileUtils::mkdir_p(directory)
+      end
       path = File.join(directory, @audio.filename)
 
-
-      File.open(path, "wb") do |file|
+      File.open(path, 'wb') do |file|
         file.write(uploaded_io.read)
       end
+
       respond_to do |format|
         if @audio.save
           format.html { redirect_to @audio, notice: 'Audio was successfully created.' }
@@ -45,8 +49,10 @@ class AudiosController < ApplicationController
           format.json { render json: @audio.errors, status: :unprocessable_entity }
         end
       end
-    rescue
-      p params[:upload][:file]
+    rescue Exception => e
+      render :text => "Ошибка на сервере. Невозможно сохранить аудио: #{e}"
+    ensure
+
     end
   end
 
